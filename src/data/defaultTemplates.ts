@@ -13,6 +13,79 @@ export interface PrebuiltPlan {
 
 export const PREBUILT_CUTTING_PLANS: PrebuiltPlan[] = [
   {
+    id: 'my-master-cutting-plan',
+    name: 'תפריט החיטוב הרשמי (1,800 קק״ל)',
+    description: 'סדר היום הקבוע שלך: 7 ארוחות מתוזמנות עם 180 גרם חלבון.',
+    targetCalories: 1800,
+    targetProtein: 180,
+    targetCarbs: 150,
+    targetFat: 50,
+    meals: [
+      {
+        id: 'meal_master_1',
+        name: '0900  קפה הפוך',
+        scheduledTime: '09:00',
+        reminderOffsetMinutes: 10,
+        isCompleted: false,
+        items: [],
+        customTotals: { calories: 120, protein: 6, carbs: 0, fat: 0 }
+      },
+      {
+        id: 'meal_master_2',
+        name: '1000  גביע קוטג׳ 3% 250 גרם + 2 פרוסות לחם מלא + מלפפון, עגבנייה ופלפל',
+        scheduledTime: '10:00',
+        reminderOffsetMinutes: 10,
+        isCompleted: false,
+        items: [],
+        customTotals: { calories: 450, protein: 30, carbs: 0, fat: 0 }
+      },
+      {
+        id: 'meal_master_3',
+        name: '1300  מעדן חלבון 20 גרם חלבון + תפוח Pink Lady',
+        scheduledTime: '11:30',
+        reminderOffsetMinutes: 10,
+        isCompleted: false,
+        items: [],
+        customTotals: { calories: 140, protein: 20, carbs: 0, fat: 0 }
+      },
+      {
+        id: 'meal_master_4',
+        name: '1500  200 גרם חזה עוף במרינדה + 150 גרם בורגול + 150 גרם עדשים ירוקות + סלט',
+        scheduledTime: '13:30',
+        reminderOffsetMinutes: 10,
+        isCompleted: false,
+        items: [],
+        customTotals: { calories: 750, protein: 75, carbs: 0, fat: 0 }
+      },
+      {
+        id: 'meal_master_5',
+        name: '1730  Müller Protein 25 גרם חלבון',
+        scheduledTime: '18:30',
+        reminderOffsetMinutes: 10,
+        isCompleted: false,
+        items: [],
+        customTotals: { calories: 140, protein: 25, carbs: 0, fat: 0 }
+      },
+      {
+        id: 'meal_master_6',
+        name: '2030  2 ביצים + סלט/ירקות',
+        scheduledTime: '20:00',
+        reminderOffsetMinutes: 10,
+        isCompleted: false,
+        items: [],
+        customTotals: { calories: 400, protein: 15, carbs: 0, fat: 0 }
+      },
+      {
+        id: 'meal_master_7',
+        name: '2130  קפה הפוך',
+        scheduledTime: '21:00',
+        reminderOffsetMinutes: 10,
+        isCompleted: false,
+        items: []
+      }
+    ]
+  },
+  {
     id: 'classic-1800',
     name: 'תפריט חיטוב קלאסי מומלץ (1,800 קק״ל)',
     description: 'חלוקה מאוזנת ל-5 ארוחות עם דגש על שימור מסת שריר גבוהה (180 גרם חלבון).',
