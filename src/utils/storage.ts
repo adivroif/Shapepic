@@ -3,10 +3,10 @@ import { PREBUILT_CUTTING_PLANS } from '../data/defaultTemplates';
 import { getTodayDateString } from './dateUtils';
 
 const STORAGE_KEYS = {
-  DAILY_PLANS: 'shapepeak_daily_plans_v1',
-  PROFILE: 'shapepeak_cutting_profile_v1',
-  ACTIVE_TEMPLATE_ID: 'shapepeak_active_template_v1',
-  NOTIFIED_MEALS: 'shapepeak_notified_meals_v1',
+  DAILY_PLANS: 'shapepeak_daily_plans_v2',
+  PROFILE: 'shapepeak_cutting_profile_v2',
+  ACTIVE_TEMPLATE_ID: 'shapepeak_active_template_v2',
+  NOTIFIED_MEALS: 'shapepeak_notified_meals_v2',
 };
 
 export const DEFAULT_PROFILE: CuttingProfile = {
@@ -15,11 +15,11 @@ export const DEFAULT_PROFILE: CuttingProfile = {
   targetWeightKg: 76,
   targetCalories: 1800,
   targetProtein: 180,
-  targetCarbs: 155,
-  targetFat: 48,
+  targetCarbs: 150,
+  targetFat: 50,
   reminderMinutesBefore: 10,
   soundEnabled: true,
-  whatsappPhone: '',
+  whatsappPhone: '0545250413',
   autoNotifications: true,
 };
 
