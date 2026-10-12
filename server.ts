@@ -212,15 +212,128 @@ if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
+// Master cutting menu template
+const MASTER_MEALS = [
+  {
+    id: "meal_master_1",
+    name: "0900  קפה הפוך",
+    scheduledTime: "09:00",
+    reminderOffsetMinutes: 10,
+    isCompleted: false,
+    items: [],
+    customTotals: { calories: 120, protein: 6, carbs: 0, fat: 0 }
+  },
+  {
+    id: "meal_master_2",
+    name: "1000  גביע קוטג׳ 3% 250 גרם + 2 פרוסות לחם מלא + מלפפון, עגבנייה ופלפל",
+    scheduledTime: "10:00",
+    reminderOffsetMinutes: 10,
+    isCompleted: false,
+    items: [],
+    customTotals: { calories: 450, protein: 30, carbs: 0, fat: 0 }
+  },
+  {
+    id: "meal_master_3",
+    name: "1300  מעדן חלבון 20 גרם חלבון + תפוח Pink Lady",
+    scheduledTime: "11:30",
+    reminderOffsetMinutes: 10,
+    isCompleted: false,
+    items: [],
+    customTotals: { calories: 140, protein: 20, carbs: 0, fat: 0 }
+  },
+  {
+    id: "meal_master_4",
+    name: "1500  200 גרם חזה עוף במרינדה + 150 גרם בורגול + 150 גרם עדשים ירוקות + סלט",
+    scheduledTime: "13:30",
+    reminderOffsetMinutes: 10,
+    isCompleted: false,
+    items: [],
+    customTotals: { calories: 750, protein: 75, carbs: 0, fat: 0 }
+  },
+  {
+    id: "meal_master_5",
+    name: "1730  Müller Protein 25 גרם חלבון",
+    scheduledTime: "18:30",
+    reminderOffsetMinutes: 10,
+    isCompleted: false,
+    items: [],
+    customTotals: { calories: 140, protein: 25, carbs: 0, fat: 0 }
+  },
+  {
+    id: "meal_master_6",
+    name: "2030  2 ביצים + סלט/ירקות",
+    scheduledTime: "20:00",
+    reminderOffsetMinutes: 10,
+    isCompleted: false,
+    items: [],
+    customTotals: { calories: 400, protein: 15, carbs: 0, fat: 0 }
+  },
+  {
+    id: "meal_master_7",
+    name: "2130  קפה הפוך",
+    scheduledTime: "21:00",
+    reminderOffsetMinutes: 10,
+    isCompleted: false,
+    items: []
+  }
+];
+
+function ensureMasterData(data: any): any {
+  if (!data) data = {};
+  if (!data.profile) {
+    data.profile = {
+      name: "מתחטב",
+      currentWeightKg: 82,
+      targetWeightKg: 76,
+      targetCalories: 1800,
+      targetProtein: 180,
+      targetCarbs: 150,
+      targetFat: 50,
+      reminderMinutesBefore: 10,
+      soundEnabled: true,
+      whatsappPhone: "0545250413",
+      autoNotifications: true
+    };
+  }
+  if (!data.dailyPlans) {
+    data.dailyPlans = {};
+  }
+
+  const existingDates = Object.keys(data.dailyPlans).sort().reverse();
+  const baseMeals = existingDates.length > 0 && data.dailyPlans[existingDates[0]].meals?.length > 0
+    ? data.dailyPlans[existingDates[0]].meals.map((m: any) => ({ ...m, isCompleted: false }))
+    : MASTER_MEALS;
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  if (!data.dailyPlans[todayStr]) {
+    data.dailyPlans[todayStr] = {
+      date: todayStr,
+      targetCalories: 1800,
+      targetProtein: 180,
+      targetCarbs: 150,
+      targetFat: 50,
+      meals: baseMeals,
+      waterIntakeMl: 0,
+      targetWaterMl: 3000
+    };
+  }
+
+  return data;
+}
+
 // GET /api/sync - Retrieve shared data across all devices
 app.get('/api/sync', (req, res) => {
   try {
+    let data: any = null;
     if (fs.existsSync(SYNC_FILE)) {
       const content = fs.readFileSync(SYNC_FILE, 'utf-8');
-      const data = JSON.parse(content);
-      return res.json({ exists: true, data });
+      data = JSON.parse(content);
     }
-    return res.json({ exists: false, data: null });
+    
+    data = ensureMasterData(data);
+    fs.writeFileSync(SYNC_FILE, JSON.stringify(data, null, 2), 'utf-8');
+
+    return res.json({ exists: true, data });
   } catch (err: any) {
     console.error('Error reading sync file:', err);
     return res.status(500).json({ error: 'Failed to read sync data' });
@@ -235,15 +348,26 @@ app.post('/api/sync', (req, res) => {
       return res.status(400).json({ error: 'profile or dailyPlans required' });
     }
 
+    let existingData: any = {};
+    if (fs.existsSync(SYNC_FILE)) {
+      try {
+        existingData = JSON.parse(fs.readFileSync(SYNC_FILE, 'utf-8'));
+      } catch (e) {}
+    }
+
     const payload = {
-      profile: profile || null,
-      dailyPlans: dailyPlans || {},
+      profile: profile || existingData.profile || null,
+      dailyPlans: {
+        ...(existingData.dailyPlans || {}),
+        ...(dailyPlans || {}),
+      },
       lastUpdated: lastUpdated || Date.now(),
       savedAt: new Date().toISOString(),
     };
 
-    fs.writeFileSync(SYNC_FILE, JSON.stringify(payload, null, 2), 'utf-8');
-    return res.json({ success: true, lastUpdated: payload.lastUpdated });
+    const finalPayload = ensureMasterData(payload);
+    fs.writeFileSync(SYNC_FILE, JSON.stringify(finalPayload, null, 2), 'utf-8');
+    return res.json({ success: true, lastUpdated: finalPayload.lastUpdated });
   } catch (err: any) {
     console.error('Error writing sync file:', err);
     return res.status(500).json({ error: 'Failed to write sync data' });
