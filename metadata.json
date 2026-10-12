@@ -1,0 +1,6 @@
+{
+  "name": "שייפ-פיק - מעקב ארוחות חיטוב ותזכורות",
+  "description": "אפליקציה למעקב ארוחות חיטוב, תזמון ארוחות לפי שעות, עריכת מאכלים וזמנים, התראות ותזכורות לטלפון",
+  "requestFramePermissions": ["notifications"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
