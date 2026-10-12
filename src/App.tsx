@@ -67,26 +67,24 @@ export default function App() {
       try {
         const serverData = await fetchServerSyncData();
         if (serverData && serverData.dailyPlans && Object.keys(serverData.dailyPlans).length > 0) {
-          // Server has data: merge and apply to local storage
-          const localPlans = loadAllDailyPlans();
-          const mergedPlans = { ...localPlans, ...serverData.dailyPlans };
-          saveAllDailyPlans(mergedPlans);
-          if (mergedPlans[currentDate]) {
-            setDailyPlan(mergedPlans[currentDate]);
-          }
+          // Server is the authoritative single source of truth for all devices
+          const serverPlans = serverData.dailyPlans;
+          saveAllDailyPlans(serverPlans);
+
+          const planForDate = serverPlans[currentDate] || getOrCreateDailyPlan(currentDate);
+          setDailyPlan(planForDate);
+
           if (serverData.profile) {
             setProfile(serverData.profile);
             saveProfile(serverData.profile);
           }
           setLastServerSyncTime(new Date(serverData.lastUpdated || Date.now()));
         } else {
-          // Server is empty: upload current local menu to server so other devices get it
+          // If server is empty, push local master plan
           const localPlans = loadAllDailyPlans();
           const localProfile = loadProfile();
-          if (Object.keys(localPlans).length > 0) {
-            await pushServerSyncData(localProfile, localPlans);
-            setLastServerSyncTime(new Date());
-          }
+          await pushServerSyncData(localProfile, localPlans);
+          setLastServerSyncTime(new Date());
         }
       } catch (err) {
         console.warn('Initial server sync error:', err);
@@ -96,6 +94,48 @@ export default function App() {
     }
     initSync();
   }, []);
+
+  // Periodic poll & focus sync so any change on one device instantly updates all others
+  useEffect(() => {
+    const pollServer = async () => {
+      try {
+        const serverData = await fetchServerSyncData();
+        if (serverData && serverData.dailyPlans && Object.keys(serverData.dailyPlans).length > 0) {
+          saveAllDailyPlans(serverData.dailyPlans);
+          if (serverData.dailyPlans[currentDate]) {
+            setDailyPlan(serverData.dailyPlans[currentDate]);
+          }
+          if (serverData.profile) {
+            setProfile(serverData.profile);
+            saveProfile(serverData.profile);
+          }
+          if (serverData.lastUpdated) {
+            setLastServerSyncTime(new Date(serverData.lastUpdated));
+          }
+        }
+      } catch (e) {
+        // silent background poll
+      }
+    };
+
+    // Poll every 8 seconds
+    const interval = setInterval(pollServer, 8000);
+
+    // Refresh immediately when user returns to tab/phone screen
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        pollServer();
+      }
+    };
+    window.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('focus', pollServer);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('focus', pollServer);
+    };
+  }, [currentDate]);
 
   // Refresh plan when date changes
   useEffect(() => {
@@ -122,11 +162,12 @@ export default function App() {
   const handleManualSync = async () => {
     const serverData = await fetchServerSyncData();
     if (serverData && serverData.dailyPlans) {
-      const localPlans = loadAllDailyPlans();
-      const mergedPlans = { ...localPlans, ...serverData.dailyPlans };
-      saveAllDailyPlans(mergedPlans);
-      if (mergedPlans[currentDate]) {
-        setDailyPlan(mergedPlans[currentDate]);
+      saveAllDailyPlans(serverData.dailyPlans);
+      if (serverData.dailyPlans[currentDate]) {
+        setDailyPlan(serverData.dailyPlans[currentDate]);
+      } else {
+        const plan = getOrCreateDailyPlan(currentDate);
+        setDailyPlan(plan);
       }
       if (serverData.profile) {
         setProfile(serverData.profile);
